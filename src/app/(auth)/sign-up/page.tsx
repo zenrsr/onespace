@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import { SignUpCard } from "../_components/sign-up-card";
+import { SignUpCard } from "../../../feats/auth/components/sign-up-card";
 
 type Props = {};
 
