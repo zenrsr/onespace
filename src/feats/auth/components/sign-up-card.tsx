@@ -1,3 +1,5 @@
+"use client";
+
 import { DotSeparartor } from "@/components/dot-separator";
 import { Button } from "@/components/ui/button";
 import {
@@ -25,6 +27,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { registerSchema } from "../schema";
 import { useRegister } from "../api/use-register";
+import { Loader } from "lucide-react";
 
 type Props = {};
 
@@ -38,7 +41,7 @@ export const SignUpCard = (props: Props) => {
     },
   });
 
-  const { mutate } = useRegister();
+  const { mutate, isPending } = useRegister();
 
   const onHandleSubmit = (values: z.infer<typeof registerSchema>) => {
     mutate({ json: values });
@@ -105,8 +108,16 @@ export const SignUpCard = (props: Props) => {
                 </FormItem>
               )}
             />
-            <Button disabled={false} size={"lg"} className="w-full rounded-xl">
-              Get Started
+            <Button
+              disabled={isPending}
+              size={"lg"}
+              className="w-full rounded-xl"
+            >
+              {isPending ? (
+                <Loader className="size-4 animate-spin transition-all text-black" />
+              ) : (
+                "Get Started"
+              )}
             </Button>
           </form>
         </Form>

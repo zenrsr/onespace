@@ -1,3 +1,4 @@
+"use client";
 import { DotSeparartor } from "@/components/dot-separator";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,6 +18,7 @@ import {
 } from "@/components/ui/form";
 import { loginSchema } from "../schema";
 import { useLogin } from "../api/use-login";
+import { Loader } from "lucide-react";
 
 type Props = {};
 
@@ -29,7 +31,7 @@ export const SignInCard = (props: Props) => {
     },
   });
 
-  const { mutate } = useLogin();
+  const { mutate, isPending } = useLogin();
 
   const onHandleSubmit = (values: z.infer<typeof loginSchema>) => {
     console.log("onHandleSubmit", values);
@@ -60,6 +62,7 @@ export const SignInCard = (props: Props) => {
                       type="email"
                       placeholder="email address"
                       {...field}
+                      disabled={isPending}
                     />
                   </FormControl>
                   <FormMessage />
@@ -72,14 +75,27 @@ export const SignInCard = (props: Props) => {
               render={({ field }) => (
                 <FormItem>
                   <FormControl>
-                    <Input type="password" placeholder="password" {...field} />
+                    <Input
+                      type="password"
+                      placeholder="password"
+                      {...field}
+                      disabled={isPending}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <Button disabled={false} size={"lg"} className="w-full rounded-xl">
-              Login
+            <Button
+              disabled={isPending}
+              size={"lg"}
+              className="w-full rounded-xl"
+            >
+              {isPending ? (
+                <Loader className="size-4 animate-spin transition-all text-black" />
+              ) : (
+                "Login"
+              )}
             </Button>
           </form>
         </Form>
@@ -92,7 +108,7 @@ export const SignInCard = (props: Props) => {
           variant={"secondary"}
           size={"lg"}
           className="w-full rounded-xl"
-          disabled={false}
+          disabled={isPending}
         >
           Login with <FcGoogle className="mx-2" />
         </Button>
@@ -100,7 +116,7 @@ export const SignInCard = (props: Props) => {
           variant={"secondary"}
           size={"lg"}
           className="w-full rounded-xl"
-          disabled={false}
+          disabled={isPending}
         >
           Login with <FaGithub className="mx-2" />
         </Button>
