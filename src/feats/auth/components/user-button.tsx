@@ -1,5 +1,5 @@
 "use client";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -17,11 +17,7 @@ import { useRandomImage } from "../api/use-random-image";
 const UserButton = () => {
   const { data: user, isLoading: isUserLoading } = useCurrent();
   const { mutate: logout } = useLogOut();
-  const {
-    imageUrl,
-    isLoading: isImageLoading,
-    error: imageError,
-  } = useRandomImage();
+  const { isLoading: isImageLoading } = useRandomImage();
 
   if (isUserLoading) {
     return (
@@ -57,12 +53,10 @@ const UserButton = () => {
               <AvatarFallback>
                 <Loader className="size-4 animate-spin" />
               </AvatarFallback>
-            ) : imageError ? (
+            ) : (
               <AvatarFallback className="bg-neutral-200 font-medium text-xl text-neutral-500 flex items-center justify-center">
                 {fallback}
               </AvatarFallback>
-            ) : (
-              <AvatarImage src={imageUrl!} />
             )}
           </Avatar>
           <div className="flex flex-col items-center justify-center">

@@ -2,31 +2,86 @@ import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { createWorkspaceSchema } from "../schema";
 import { sessionMiddleware } from "@/lib/session-middlware";
-import { DATABASE_ID, WORKSPACES_ID } from "@/config";
-import { ID } from "node-appwrite";
+import {
+  DATABASE_ID,
+  IMAGES_BUCKET_ID,
+  MEMBERS_ID,
+  WORKSPACES_ID,
+} from "@/config";
+import { ID, Query } from "node-appwrite";
+import { memberRole } from "@/feats/members/types";
+import { generateInviteCode } from "@/lib/utils";
 
-const app = new Hono().post(
-  "/",
-  zValidator("json", createWorkspaceSchema),
-  sessionMiddleware,
-  async (c) => {
-    const databases = c.get("databases");
+const app = new Hono()
+  .get("/", sessionMiddleware, async (c) => {
     const user = c.get("user");
+    const databases = c.get("databases");
+    const members = await databases.listDocuments(DATABASE_ID, MEMBERS_ID, [
+      Query.equal("userId", user.$id),
+    ]);
 
-    const { name } = c.req.valid("json");
+    if (members.total === 0) {
+      return c.json({ data: { documents: [], total: 0 } });
+    }
 
-    const workspace = await databases.createDocument(
+    const workspaceIds = members.documents.map((member) => member.workspaceId);
+
+    const workspaces = await databases.listDocuments(
       DATABASE_ID,
       WORKSPACES_ID,
-      ID.unique(),
-      {
-        name,
-        userId: user.$id,
-      }
+      [Query.orderDesc("$createdAt"), Query.contains("$id", workspaceIds)]
     );
 
-    return c.json({ data: workspace });
-  }
-);
+    return c.json({ data: workspaces });
+  })
+  .post(
+    "/",
+    zValidator("form", createWorkspaceSchema),
+    sessionMiddleware,
+    async (c) => {
+      const databases = c.get("databases");
+      const storage = c.get("storage");
+      const user = c.get("user");
+
+      const { name, image } = c.req.valid("form");
+      let uploadedImageUrl: string | undefined;
+      if (image instanceof File) {
+        const file = await storage.createFile(
+          IMAGES_BUCKET_ID,
+          ID.unique(),
+          image
+        );
+
+        const arrayBuffer = await storage.getFilePreview(
+          IMAGES_BUCKET_ID,
+          file.$id
+        );
+
+        uploadedImageUrl = `data:image/png;base64,${Buffer.from(
+          arrayBuffer
+        ).toString("base64")}`;
+      }
+
+      const workspace = await databases.createDocument(
+        DATABASE_ID,
+        WORKSPACES_ID,
+        ID.unique(),
+        {
+          name,
+          userId: user.$id,
+          imageUrl: uploadedImageUrl,
+          inviteCode: generateInviteCode(5),
+        }
+      );
+
+      await databases.createDocument(DATABASE_ID, MEMBERS_ID, ID.unique(), {
+        userId: user.$id,
+        workspaceId: workspace.$id,
+        role: memberRole.ADMIN,
+      });
+
+      return c.json({ data: workspace });
+    }
+  );
 
 export default app;

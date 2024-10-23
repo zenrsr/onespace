@@ -3,6 +3,7 @@ import Link from "next/link";
 import React from "react";
 import { DotSeparartor } from "./dot-separator";
 import Navigation from "./navigation";
+import WorkspaceSwitcher from "./workspace-switcher";
 
 type Props = {};
 
@@ -15,6 +16,8 @@ const Sidebar = (props: Props) => {
           <h1 className="text-3xl font-extrabold font-mono">OneSpace</h1>
         </div>
       </Link>
+      <DotSeparartor className="my-4" />
+      <WorkspaceSwitcher />
       <DotSeparartor className="my-4" />
       <Navigation />
     </aside>
